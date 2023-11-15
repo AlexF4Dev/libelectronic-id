@@ -105,9 +105,36 @@ inline fs::path czechPkcs11ModulePath()
 #endif
 }
 
+
+inline fs::path pivPKCS11ModulePath()
+{
+#ifdef _WIN32
+    return programFilesPath() / L"OpenSC Project/OpenSC/pkcs11/opensc-pkcs11.dll";
+#elif defined(__APPLE__)
+    return "/Library/OpenSC/lib/opensc-pkcs11.so";
+#else
+    return "/usr/lib/x86_64-linux-gnu/opensc-pkcs11.so";
+#endif
+}
+
+
 const std::map<Pkcs11ElectronicIDType, Pkcs11ElectronicIDModule> SUPPORTED_PKCS11_MODULES {
     // EstEIDIDEMIAV1 configuration is here only for testing,
     // it is not enabled in getElectronicID().
+
+    {Pkcs11ElectronicIDType::PivEID,
+     {
+         "EstEID IDEMIA v1 (PKCS#11)"s, // name
+         ElectronicID::Type::EstEID, // type
+         pivPKCS11ModulePath().make_preferred(), // path
+
+         JsonWebSignatureAlgorithm::ES384, // authSignatureAlgorithm
+         RSA_SIGNATURE_ALGOS(), // supportedSigningAlgorithms
+         3,
+         false,
+         false,
+     }},
+
     {Pkcs11ElectronicIDType::EstEIDIDEMIAV1,
      {
          "EstEID IDEMIA v1 (PKCS#11)"s, // name

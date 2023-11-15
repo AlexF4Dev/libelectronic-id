@@ -36,6 +36,7 @@ enum class Pkcs11ElectronicIDType {
     BelEIDV1_7,
     BelEIDV1_8,
     CzeEID,
+    PivEID
 };
 
 struct Pkcs11ElectronicIDModule

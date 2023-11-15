@@ -60,6 +60,17 @@
 namespace electronic_id
 {
 
+#define ATTR_METHOD(ATTR, TYPE) \
+TYPE \
+get##ATTR(CK_SESSION_HANDLE sess, CK_OBJECT_HANDLE obj) const\
+{ \
+	TYPE type = 0; \
+	CK_ATTRIBUTE	attr = { CKA_##ATTR, &type, sizeof(type) }; \
+ \
+    C(GetAttributeValue, sess, obj, &attr, 1ul); \
+	return type; \
+}
+
 class PKCS11CardManager
 {
 public:
@@ -166,6 +177,9 @@ public:
         return result;
     }
 
+    ATTR_METHOD(CLASS, CK_OBJECT_CLASS);		/* getCLASS */
+    ATTR_METHOD(ALWAYS_AUTHENTICATE, CK_BBOOL); /* getALWAYS_AUTHENTICATE */
+
     electronic_id::ElectronicID::Signature sign(const Token& token,
                                                 const std::vector<CK_BYTE>& hash,
                                                 electronic_id::HashAlgorithm hashAlgo,
@@ -218,9 +232,28 @@ public:
             keyType == CKK_ECDSA ? electronic_id::SignatureAlgorithm::ES
                                  : electronic_id::SignatureAlgorithm::RS,
             hashAlgo};
-
+        
+        if (!providesExternalPinDialog 
+            && getCLASS(session, privateKeyHandle[0]) == CKO_PRIVATE_KEY 
+            && getALWAYS_AUTHENTICATE(session, privateKeyHandle[0])) {
+            try {	
+                C(Login, session, CKU_CONTEXT_SPECIFIC, CK_CHAR_PTR(pin), CK_ULONG(pinSize));
+            } catch (const VerifyPinFailed& e) {
+                if (e.status() != VerifyPinFailed::Status::RETRY_ALLOWED)
+                    throw;
+                try {
+                    CK_TOKEN_INFO tokenInfo;
+                    C(GetTokenInfo, token.slotID, &tokenInfo);
+                    throw VerifyPinFailed(VerifyPinFailed::Status::RETRY_ALLOWED, nullptr,
+                                          pinRetryCount(tokenInfo.flags));
+                } catch (const Pkcs11Error&) {
+                    throw e;
+                }
+            }
+        }
         CK_MECHANISM mechanism = {keyType == CKK_ECDSA ? CKM_ECDSA : CKM_RSA_PKCS, nullptr, 0};
         C(SignInit, session, &mechanism, privateKeyHandle[0]);
+
         std::vector<CK_BYTE> hashWithPaddingOID =
             keyType == CKK_RSA ? addRSAOID(hashAlgo, hash) : hash;
 
