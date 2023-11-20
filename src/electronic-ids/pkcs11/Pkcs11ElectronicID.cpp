@@ -135,6 +135,19 @@ const std::map<Pkcs11ElectronicIDType, Pkcs11ElectronicIDModule> SUPPORTED_PKCS1
          false,
      }},
 
+     {Pkcs11ElectronicIDType::PivTestEID,
+     {
+         "EstEID IDEMIA v1 (PKCS#11)"s, // name
+         ElectronicID::Type::EstEID, // type
+         pivPKCS11ModulePath().make_preferred(), // path
+
+         JsonWebSignatureAlgorithm::ES384, // authSignatureAlgorithm
+         RSA_SIGNATURE_ALGOS(), // supportedSigningAlgorithms
+         3,
+         false,
+         false,
+     }},
+
     {Pkcs11ElectronicIDType::EstEIDIDEMIAV1,
      {
          "EstEID IDEMIA v1 (PKCS#11)"s, // name
