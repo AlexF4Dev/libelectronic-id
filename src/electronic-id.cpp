@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Estonian Information System Authority
+ * Copyright (c) 2020-2024 Estonian Information System Authority
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,6 @@
  * SOFTWARE.
  */
 
-#include "electronic-ids/pcsc/EstEIDGemalto.hpp"
 #include "electronic-ids/pcsc/EstEIDIDEMIA.hpp"
 #include "electronic-ids/pcsc/FinEID.hpp"
 #include "electronic-ids/pcsc/LatEIDIDEMIAv1.hpp"
@@ -50,8 +49,8 @@ constexpr auto constructor(const Reader& reader)
     return std::make_unique<T>(reader.connectToCard());
 }
 
-template <Pkcs11ElectronicIDType value>
-constexpr auto constructor(const Reader&)
+template <ElectronicID::Type value>
+constexpr auto constructor(const Reader& /*reader*/)
 {
     return std::make_unique<Pkcs11ElectronicID>(value);
 }
@@ -60,18 +59,10 @@ constexpr auto constructor(const Reader&)
 const std::map<byte_vector, ElectronicIDConstructor> SUPPORTED_ATRS {
     {{0x3b, 0xdf, 0x96, 0x00, 0x81, 0xb1, 0xfe, 0x45, 0x1f, 0x83, 
         0x80, 0x73, 0xcc, 0x91, 0xcb, 0xf9, 0xa0, 0x00, 0x00, 0x03, 0x08, 0x00, 0x00, 0x10, 0x00, 0x79},
-    constructor<Pkcs11ElectronicIDType::PivTestEID>},
+    constructor<ElectronicID::Type::PivTestEID>},    
     {{0x3b,0xd6,0x97,0x00,0x81,0xb1,0xfe,0x45,0x1f,0x87,0x80,0x31,
     0xc1,0x52,0x41,0x1a,0x2b},
-    constructor<Pkcs11ElectronicIDType::PivEID>},
-   // EstEID Gemalto v3.5.8 cold
-    {{0x3b, 0xfa, 0x18, 0x00, 0x00, 0x80, 0x31, 0xfe, 0x45, 0xfe,
-      0x65, 0x49, 0x44, 0x20, 0x2f, 0x20, 0x50, 0x4b, 0x49, 0x03},
-     constructor<EstEIDGemaltoV3_5_8>},
-    // EstEID Gemalto v3.5.8 warm
-    {{0x3b, 0xfe, 0x18, 0x00, 0x00, 0x80, 0x31, 0xfe, 0x45, 0x80, 0x31, 0x80,
-      0x66, 0x40, 0x90, 0xa4, 0x16, 0x2a, 0x00, 0x83, 0x0f, 0x90, 0x00, 0xef},
-     constructor<EstEIDGemaltoV3_5_8>},
+    constructor<ElectronicID::Type::PivEID>},
     // EstEID Idemia v1.0
     {{0x3b, 0xdb, 0x96, 0x00, 0x80, 0xb1, 0xfe, 0x45, 0x1f, 0x83, 0x00,
       0x12, 0x23, 0x3f, 0x53, 0x65, 0x49, 0x44, 0x0f, 0x90, 0x00, 0xf1},
@@ -99,22 +90,32 @@ const std::map<byte_vector, ElectronicIDConstructor> SUPPORTED_ATRS {
     // LitEID
     {{0x3B, 0x9D, 0x18, 0x81, 0x31, 0xFC, 0x35, 0x80, 0x31, 0xC0, 0x69,
       0x4D, 0x54, 0x43, 0x4F, 0x53, 0x73, 0x02, 0x05, 0x05, 0xD3},
-     constructor<Pkcs11ElectronicIDType::LitEIDv3>},
+     constructor<ElectronicID::Type::LitEID>},
+    // LitEID v2.0
+    {{0x3B, 0x9D, 0x18, 0x81, 0x31, 0xFC, 0x35, 0x80, 0x31, 0xC0, 0x69,
+      0x4D, 0x54, 0x43, 0x4F, 0x53, 0x73, 0x02, 0x06, 0x04, 0xD1},
+     constructor<ElectronicID::Type::LitEID>},
     // HrvEID
     {{0x3b, 0xff, 0x13, 0x00, 0x00, 0x81, 0x31, 0xfe, 0x45, 0x00, 0x31, 0xb9, 0x64,
       0x04, 0x44, 0xec, 0xc1, 0x73, 0x94, 0x01, 0x80, 0x82, 0x90, 0x00, 0x12},
-     constructor<Pkcs11ElectronicIDType::HrvEID>},
-    // BelEIDV1_7
+     constructor<ElectronicID::Type::HrvEID>},
+    // BelEID
     {{0x3b, 0x98, 0x13, 0x40, 0x0a, 0xa5, 0x03, 0x01, 0x01, 0x01, 0xad, 0x13, 0x11},
-     constructor<Pkcs11ElectronicIDType::BelEIDV1_7>},
-    // BelEIDV1_8
+     constructor<ElectronicID::Type::BelEID>},
+    // BelEID
+    {{0x3B, 0x98, 0x94, 0x40, 0x0A, 0xA5, 0x03, 0x01, 0x01, 0x01, 0xAD, 0x13, 0x10},
+     constructor<ElectronicID::Type::BelEID>},
+    // BelEID
+    {{0x3B, 0x98, 0x94, 0x40, 0xFF, 0xA5, 0x03, 0x01, 0x01, 0x01, 0xAD, 0x13, 0x10},
+     constructor<ElectronicID::Type::BelEID>},
+    // BelEID - https://github.com/Fedict/eid-mw/wiki/Applet-1.8
     {{0x3b, 0x7f, 0x96, 0x00, 0x00, 0x80, 0x31, 0x80, 0x65, 0xb0,
       0x85, 0x04, 0x01, 0x20, 0x12, 0x0f, 0xff, 0x82, 0x90, 0x00},
-     constructor<Pkcs11ElectronicIDType::BelEIDV1_8>},
+     constructor<ElectronicID::Type::BelEID>},
     // CzeEID
     {{0x3b, 0x7e, 0x94, 0x00, 0x00, 0x80, 0x25, 0xd2, 0x03, 0x10, 0x01, 0x00, 0x56, 0x00, 0x00,
       0x00, 0x02, 0x02, 0x00},
-     constructor<Pkcs11ElectronicIDType::CzeEID>},
+     constructor<ElectronicID::Type::CzeEID>},
 };
 
 inline std::string byteVectorToHexString(const byte_vector& bytes)
@@ -162,9 +163,8 @@ ElectronicID::ptr getElectronicID(const pcsc_cpp::Reader& reader)
 
 bool ElectronicID::isSupportedSigningHashAlgorithm(const HashAlgorithm hashAlgo) const
 {
-    auto supported = supportedSigningAlgorithms();
-    return std::any_of(supported.cbegin(), supported.cend(),
-                       [hashAlgo](SignatureAlgorithm signAlgo) { return signAlgo == hashAlgo; });
+    const auto& supported = supportedSigningAlgorithms();
+    return std::find(supported.cbegin(), supported.cend(), hashAlgo) != supported.cend();
 }
 
 AutoSelectFailed::AutoSelectFailed(Reason r) :
@@ -194,20 +194,17 @@ HashAlgorithm::HashAlgorithm(const std::string& algoName)
 HashAlgorithm::operator std::string() const
 {
     const auto algoNameValuePair =
-        std::find_if(SUPPORTED_ALGORITHMS.begin(), SUPPORTED_ALGORITHMS.end(),
+        std::find_if(SUPPORTED_ALGORITHMS.cbegin(), SUPPORTED_ALGORITHMS.cend(),
                      [this](const auto& pair) { return pair.second == value; });
-    return algoNameValuePair != SUPPORTED_ALGORITHMS.end() ? algoNameValuePair->first : "UNKNOWN";
+    return algoNameValuePair != SUPPORTED_ALGORITHMS.cend() ? algoNameValuePair->first : "UNKNOWN";
 }
 
 std::string HashAlgorithm::allSupportedAlgorithmNames()
 {
-    static auto SUPPORTED_ALGORITHM_NAMES = std::string {};
-    if (SUPPORTED_ALGORITHM_NAMES.empty()) {
-        SUPPORTED_ALGORITHM_NAMES = std::accumulate(
-            std::next(SUPPORTED_ALGORITHMS.begin()), SUPPORTED_ALGORITHMS.end(),
-            SUPPORTED_ALGORITHMS.begin()->first,
-            [](auto result, const auto& value) { return result + ", "s + value.first; });
-    }
+    static const auto SUPPORTED_ALGORITHM_NAMES = std::accumulate(
+        std::next(SUPPORTED_ALGORITHMS.begin()), SUPPORTED_ALGORITHMS.end(),
+        std::string(SUPPORTED_ALGORITHMS.begin()->first),
+        [](auto result, const auto& value) { return result + ", "s + std::string(value.first); });
     return SUPPORTED_ALGORITHM_NAMES;
 }
 

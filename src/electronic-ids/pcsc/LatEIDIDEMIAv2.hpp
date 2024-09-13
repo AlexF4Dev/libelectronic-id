@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Estonian Information System Authority
+ * Copyright (c) 2020-2024 Estonian Information System Authority
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,10 +40,10 @@ private:
     std::string name() const override { return "LatEID IDEMIA v2"; }
 
     const std::set<SignatureAlgorithm>& supportedSigningAlgorithms() const override;
-    SignatureAlgorithm signingSignatureAlgorithm() const override { return SignatureAlgorithm::RS; }
+    SignatureAlgorithm signingSignatureAlgorithm() const override;
 
     void selectAuthSecurityEnv() const override;
-    void selectSignSecurityEnv() const override;
+    pcsc_cpp::byte_type selectSignSecurityEnv() const override;
 
     struct Private;
     std::unique_ptr<Private> data;

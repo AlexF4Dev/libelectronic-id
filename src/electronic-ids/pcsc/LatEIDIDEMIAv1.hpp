@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Estonian Information System Authority
+ * Copyright (c) 2020-2024 Estonian Information System Authority
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -48,7 +48,7 @@ private:
     const SelectApplicationIDCmds& selectApplicationID() const override;
     const SelectCertificateCmds& selectCertificate() const override;
     void selectAuthSecurityEnv() const override;
-    void selectSignSecurityEnv() const override;
+    pcsc_cpp::byte_type selectSignSecurityEnv() const override;
 
     size_t pinBlockLength() const override { return 0x40; }
     byte_type signingPinReference() const override { return 0x81; }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Estonian Information System Authority
+ * Copyright (c) 2020-2024 Estonian Information System Authority
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -51,11 +51,11 @@ const SelectApplicationIDCmds& LatEIDIDEMIAV1::selectApplicationID() const
 
 const SelectCertificateCmds& LatEIDIDEMIAV1::selectCertificate() const
 {
-    static const auto selectCertCmds = SelectCertificateCmds {
+    static const SelectCertificateCmds selectCertCmds {
         // Authentication certificate.
-        {0x00, 0xA4, 0x01, 0x0C, 0x02, 0xA0, 0x02},
+        {0x00, 0xA4, 0x01, 0x0C, {0xA0, 0x02}},
         // Signing certificate.
-        {0x00, 0xA4, 0x01, 0x0C, 0x02, 0xA0, 0x01},
+        {0x00, 0xA4, 0x01, 0x0C, {0xA0, 0x01}},
     };
     return selectCertCmds;
 }
@@ -65,9 +65,9 @@ void LatEIDIDEMIAV1::selectAuthSecurityEnv() const
     selectSecurityEnv(*card, 0xA4, 0x02, 0x82, name());
 }
 
-void LatEIDIDEMIAV1::selectSignSecurityEnv() const
+pcsc_cpp::byte_type LatEIDIDEMIAV1::selectSignSecurityEnv() const
 {
-    selectSecurityEnv(*card, 0xA4, 0x02, 0x81, name());
+    return selectSecurityEnv(*card, 0xA4, 0x02, 0x81, name());
 }
 
 } // namespace electronic_id

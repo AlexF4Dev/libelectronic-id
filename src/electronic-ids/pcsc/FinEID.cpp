@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Estonian Information System Authority
+ * Copyright (c) 2020-2024 Estonian Information System Authority
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -41,14 +41,18 @@ using namespace pcsc_cpp;
 namespace
 {
 
-const byte_vector SELECT_MAIN_AID {0x00, 0xA4, 0x04, 0x00, 0x0C, 0xa0, 0x00, 0x00, 0x00,
-                                   0x63, 0x50, 0x4b, 0x43, 0x53, 0x2d, 0x31, 0x35};
+const CommandApdu SELECT_MAIN_AID {
+    0x00,
+    0xA4,
+    0x04,
+    0x00,
+    {0xa0, 0x00, 0x00, 0x00, 0x63, 0x50, 0x4b, 0x43, 0x53, 0x2d, 0x31, 0x35}};
 
-const byte_vector SELECT_MASTER_FILE {0x00, 0xa4, 0x00, 0x0C, 0x02, 0x3f, 0x00};
+const CommandApdu SELECT_MASTER_FILE {0x00, 0xa4, 0x00, 0x0C, {0x3f, 0x00}};
 
-const byte_vector SELECT_AUTH_CERT_FILE {0x00, 0xA4, 0x08, 0x0C, 0x02, 0x43, 0x31};
-const byte_vector SELECT_SIGN_CERT_FILE_V3 {0x00, 0xA4, 0x08, 0x0C, 0x04, 0x50, 0x16, 0x43, 0x35};
-const byte_vector SELECT_SIGN_CERT_FILE_V4 {0x00, 0xA4, 0x08, 0x0C, 0x04, 0x50, 0x16, 0x43, 0x32};
+const CommandApdu SELECT_AUTH_CERT_FILE {0x00, 0xA4, 0x08, 0x0C, {0x43, 0x31}};
+const CommandApdu SELECT_SIGN_CERT_FILE_V3 {0x00, 0xA4, 0x08, 0x0C, {0x50, 0x16, 0x43, 0x35}};
+const CommandApdu SELECT_SIGN_CERT_FILE_V4 {0x00, 0xA4, 0x08, 0x0C, {0x50, 0x16, 0x43, 0x32}};
 
 constexpr byte_type PIN_PADDING_CHAR = 0x00;
 constexpr byte_type AUTH_PIN_REFERENCE = 0x11;
@@ -66,10 +70,9 @@ namespace electronic_id
 
 byte_vector FinEIDv3::getCertificateImpl(const CertificateType type) const
 {
+    transmitApduWithExpectedResponse(*card, SELECT_MAIN_AID);
     return electronic_id::getCertificate(
-        *card,
-        {SELECT_MAIN_AID,
-         type.isAuthentication() ? SELECT_AUTH_CERT_FILE : SELECT_SIGN_CERT_FILE_V3});
+        *card, type.isAuthentication() ? SELECT_AUTH_CERT_FILE : SELECT_SIGN_CERT_FILE_V3);
 }
 
 byte_vector FinEIDv3::signWithAuthKeyImpl(const byte_vector& pin, const byte_vector& hash) const
@@ -142,7 +145,7 @@ byte_vector FinEIDv3::sign(const HashAlgorithm hashAlgo, const byte_vector& hash
     byte_vector tlv {0x90, byte_type(hash.size())};
     tlv.insert(tlv.cend(), hash.cbegin(), hash.cend());
 
-    const CommandApdu computeSignature {{0x00, 0x2A, 0x90, 0xA0}, tlv};
+    const CommandApdu computeSignature {{0x00, 0x2A, 0x90, 0xA0}, std::move(tlv)};
     const auto response = card->transmit(computeSignature);
 
     if (response.sw1 == ResponseApdu::WRONG_LENGTH) {
@@ -190,10 +193,9 @@ ElectronicID::PinRetriesRemainingAndMax FinEIDv3::pinRetriesLeft(byte_type pinRe
 
 byte_vector FinEIDv4::getCertificateImpl(const CertificateType type) const
 {
+    transmitApduWithExpectedResponse(*card, SELECT_MAIN_AID);
     return electronic_id::getCertificate(
-        *card,
-        {SELECT_MAIN_AID,
-         type.isAuthentication() ? SELECT_AUTH_CERT_FILE : SELECT_SIGN_CERT_FILE_V4});
+        *card, type.isAuthentication() ? SELECT_AUTH_CERT_FILE : SELECT_SIGN_CERT_FILE_V4);
 }
 
 byte_vector FinEIDv4::signWithAuthKeyImpl(const byte_vector& pin, const byte_vector& hash) const

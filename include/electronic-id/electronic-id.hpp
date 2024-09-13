@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Estonian Information System Authority
+ * Copyright (c) 2020-2024 Estonian Information System Authority
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,10 +24,6 @@
 
 #include "enums.hpp"
 
-#include "pcsc-cpp/pcsc-cpp.hpp"
-
-#include <memory>
-
 namespace electronic_id
 {
 
@@ -37,7 +33,7 @@ class ElectronicID
 {
 public:
     using ptr = std::shared_ptr<ElectronicID>;
-    using PinMinMaxLength = std::pair<size_t, size_t>;
+    using PinMinMaxLength = std::pair<uint8_t, uint8_t>;
     using PinRetriesRemainingAndMax = std::pair<uint8_t, int8_t>;
     using byte_vector = pcsc_cpp::byte_vector;
     using byte_type = pcsc_cpp::byte_type;
@@ -49,9 +45,10 @@ public:
         LatEID,
         LitEID,
         HrvEID,
-        BelEIDV1_7,
-        BelEIDV1_8,
+        BelEID,
         CzeEID,
+        PivEID,
+        PivTestEID,
 #ifdef _WIN32
         MsCryptoApiEID,
 #endif
@@ -88,6 +85,13 @@ public:
     // General functions.
     virtual bool allowsUsingLettersAndSpecialCharactersInPin() const { return false; }
     virtual bool providesExternalPinDialog() const { return false; }
+
+    /** Extension point for releasing the resources held by the ElectronicID object.
+     * By default, this function does nothing. It serves as an extension point for
+     * Pkcs11ElectronicID which needs to release the PKCS#11 module before the application exits to
+     * prevent potential crashes. */
+    virtual void release() const {}
+
     virtual std::string name() const = 0;
     virtual Type type() const = 0;
 

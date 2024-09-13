@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Estonian Information System Authority
+ * Copyright (c) 2020-2024 Estonian Information System Authority
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,6 @@
 
 #include "../common/selectcard.hpp"
 
-#include "electronic-id/electronic-id.hpp"
-
 #include "atrs.hpp"
 
 #include <gtest/gtest.h>
@@ -35,15 +33,6 @@ using namespace electronic_id;
 TEST(electronic_id_test, autoSelectFailureWithUnsupportedCard)
 {
     EXPECT_THROW({ autoSelectSupportedCard(); }, AutoSelectFailed);
-}
-
-TEST(electronic_id_test, autoSelectSuccessWithSupportedCardEstGEMALTO)
-{
-    PcscMock::setAtr(ESTEID_GEMALTO_V3_5_8_COLD_ATR);
-    auto result = autoSelectSupportedCard();
-    EXPECT_TRUE(result);
-    EXPECT_EQ(result->eid().name(), "EstEID Gemalto v3.5.8");
-    PcscMock::reset();
 }
 
 TEST(electronic_id_test, autoSelectSuccessWithSupportedCardEstIDEMIA)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Estonian Information System Authority
+ * Copyright (c) 2020-2024 Estonian Information System Authority
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,15 +31,12 @@
 namespace electronic_id
 {
 
-inline pcsc_cpp::byte_vector
-getCertificate(pcsc_cpp::SmartCard& card,
-               const std::vector<pcsc_cpp::byte_vector>& selectCertFileCmds)
+inline pcsc_cpp::byte_vector getCertificate(pcsc_cpp::SmartCard& card,
+                                            const pcsc_cpp::CommandApdu& selectCertFileCmd)
 {
     static const size_t MAX_LE_VALUE = 0xb5;
 
-    for (const auto& commandApdu : selectCertFileCmds) {
-        transmitApduWithExpectedResponse(card, commandApdu);
-    }
+    transmitApduWithExpectedResponse(card, selectCertFileCmd);
 
     const auto length = readDataLengthFromAsn1(card);
 
@@ -55,7 +52,7 @@ inline pcsc_cpp::byte_vector addPaddingToPin(const pcsc_cpp::byte_vector& pin, s
 }
 
 inline void verifyPin(pcsc_cpp::SmartCard& card, pcsc_cpp::byte_type p2,
-                      const pcsc_cpp::byte_vector& pin, size_t pinMinLength, size_t paddingLength,
+                      const pcsc_cpp::byte_vector& pin, uint8_t pinMinLength, size_t paddingLength,
                       pcsc_cpp::byte_type paddingChar)
 {
     const pcsc_cpp::CommandApdu VERIFY_PIN {0x00, 0x20, 0x00, p2};
@@ -64,7 +61,7 @@ inline void verifyPin(pcsc_cpp::SmartCard& card, pcsc_cpp::byte_type p2,
     if (card.readerHasPinPad()) {
         const pcsc_cpp::CommandApdu verifyPin {VERIFY_PIN,
                                                addPaddingToPin({}, paddingLength, paddingChar)};
-        response = card.transmitCTL(verifyPin, 0, uint8_t(pinMinLength));
+        response = card.transmitCTL(verifyPin, 0, pinMinLength);
 
     } else {
         const pcsc_cpp::CommandApdu verifyPin {VERIFY_PIN,
@@ -177,9 +174,10 @@ inline pcsc_cpp::byte_vector computeSignature(pcsc_cpp::SmartCard& card,
     return response.data;
 }
 
-inline void selectSecurityEnv(pcsc_cpp::SmartCard& card, pcsc_cpp::byte_type env,
-                              pcsc_cpp::byte_type signatureAlgo, pcsc_cpp::byte_type keyReference,
-                              const std::string& cardType)
+inline pcsc_cpp::byte_type selectSecurityEnv(pcsc_cpp::SmartCard& card, pcsc_cpp::byte_type env,
+                                             pcsc_cpp::byte_type signatureAlgo,
+                                             pcsc_cpp::byte_type keyReference,
+                                             const std::string& cardType)
 {
     const auto response = card.transmit(
         {0x00, 0x22, 0x41, env, {0x80, 0x01, signatureAlgo, 0x84, 0x01, keyReference}});
@@ -189,6 +187,7 @@ inline void selectSecurityEnv(pcsc_cpp::SmartCard& card, pcsc_cpp::byte_type env
               cardType + ": Command SET ENV failed with error "
                   + pcsc_cpp::bytes2hexstr(response.toBytes()));
     }
+    return signatureAlgo;
 }
 
 } // namespace electronic_id

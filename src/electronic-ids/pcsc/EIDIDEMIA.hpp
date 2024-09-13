@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Estonian Information System Authority
+ * Copyright (c) 2020-2024 Estonian Information System Authority
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,15 +29,15 @@ namespace electronic_id
 
 struct SelectApplicationIDCmds
 {
-    const pcsc_cpp::byte_vector MAIN_AID;
-    const pcsc_cpp::byte_vector AUTH_AID;
-    const pcsc_cpp::byte_vector SIGN_AID;
+    const pcsc_cpp::CommandApdu MAIN_AID;
+    const pcsc_cpp::CommandApdu AUTH_AID;
+    const pcsc_cpp::CommandApdu SIGN_AID;
 };
 
 struct SelectCertificateCmds
 {
-    const pcsc_cpp::byte_vector AUTH_CERT;
-    const pcsc_cpp::byte_vector SIGN_CERT;
+    const pcsc_cpp::CommandApdu AUTH_CERT;
+    const pcsc_cpp::CommandApdu SIGN_CERT;
 };
 
 class EIDIDEMIA : public PcscElectronicID
@@ -58,7 +58,7 @@ protected:
     virtual const SelectApplicationIDCmds& selectApplicationID() const;
     virtual const SelectCertificateCmds& selectCertificate() const;
     virtual void selectAuthSecurityEnv() const = 0;
-    virtual void selectSignSecurityEnv() const = 0;
+    virtual pcsc_cpp::byte_type selectSignSecurityEnv() const = 0;
 
     virtual size_t pinBlockLength() const { return authPinMinMaxLength().second; }
     virtual byte_type signingPinReference() const { return 0x85; }
